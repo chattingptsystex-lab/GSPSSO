@@ -1,2 +1,2 @@
 # GSPSSO
-政府vpu SSO
+政府SSO
