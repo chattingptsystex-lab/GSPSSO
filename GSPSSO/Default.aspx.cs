@@ -33,6 +33,17 @@ namespace GSPSSO
 
         private async Task SignInPermissionApiAsync(string idToken)
         {
+            // 除錯：Web.config 設 Debug.ShowClaims=true 時，只顯示 idToken payload 不導轉（用完請關閉）
+            if (string.Equals(ConfigurationManager.AppSettings["Debug.ShowClaims"], "true", StringComparison.OrdinalIgnoreCase))
+            {
+                string[] p = idToken.Split('.');
+                string b = p[1].Replace('-', '+').Replace('_', '/');
+                b = b.PadRight(b.Length + (4 - b.Length % 4) % 4, '=');
+                var payloadJson = JObject.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(b)));
+                litResult.Text = "<pre>" + HttpUtility.HtmlEncode(payloadJson.ToString()) + "</pre>";
+                return;
+            }
+
             string account = GetAccountFromIdToken(idToken, out string name, out string email);
 
             if (string.IsNullOrWhiteSpace(account))
@@ -96,9 +107,9 @@ namespace GSPSSO
             name = (string)claims["name"];
             email = (string)claims["email"];
 
-            return (string)claims["account"]
-                ?? (string)claims["preferred_username"]
-                ?? (string)claims["sub"];
+            return (string)claims["OriAccount"]
+                ?? (string)claims["account"]
+                ?? (string)claims["preferred_username"];
         }
 
         protected void btnLogout_Click(object sender, EventArgs e)
